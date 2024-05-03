@@ -65,23 +65,36 @@ public:
   static std::unique_ptr<Box> makeBlueBox(double initial_weight);
   bool operator<(const Box &rhs) const { return weight_ < rhs.weight_; }
 
-  // TODO
-
 protected:
   double weight_;
 };
 
-class GreenBox : Box {
+class GreenBox : public Box {
 public:
-  double absorb();
+  explicit GreenBox(double initial_weight) : Box(initial_weight) {}
+  double absorb(double weight) {
+    absorbed_weights_.push_back(weight);
+    weight_ = weight_ + weight;
+    return computeSquareOfMeans();
+  }
+  double computeSquareOfMeans() {
+    // compute square of means
+  }
+
+private:
+  std::vector<double> absorbed_weights_;
 };
+
+std::unique_ptr<Box> Box::makeGreenBox(double initial_weight) {
+  return std::make_unique<GreenBox>(initial_weight);
+}
 
 class Player {
 public:
   void takeTurn(uint32_t input_weight,
                 const std::vector<std::unique_ptr<Box>> &boxes) {
-    GreenBox box;  //use of overloaded < on box to get minimun
-    score_ = box.absorb();
+    GreenBox box; // use of overloaded < on box to get minimun
+    score_ = box.absorb(input_weight);
   }
   double getScore() const { return score_; }
 
