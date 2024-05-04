@@ -65,6 +65,8 @@ public:
   static std::unique_ptr<Box> makeBlueBox(double initial_weight);
   bool operator<(const Box &rhs) const { return weight_ < rhs.weight_; }
 
+  virtual double calculateScore() const = 0;
+
 protected:
   double weight_;
 };
@@ -75,14 +77,34 @@ public:
   double absorb(double weight) {
     absorbed_weights_.push_back(weight);
     weight_ = weight_ + weight;
-    return computeSquareOfMeans();
+    return calculateScore();
   }
-  double computeSquareOfMeans() {
-    // compute square of means
+
+  double calculateScore() const override {
+    if (absorbed_weights_.empty())
+      return 0.0;
+
+    if (absorbed_weights_.size() < 3)
+      return std::pow(meanList(absorbed_weights_), 2);
+
+    std::vector<double> last_three(absorbed_weights_.rbegin(),
+                                   absorbed_weights_.rbegin() + 3);
+    return std::pow(mean(last_three), 2);
   }
 
 private:
   std::vector<double> absorbed_weights_;
+  double mean(const std::vector<double> &vec) const {
+    return std::accumulate(vec.begin(), vec.end(), 0.0) / vec.size();
+  }
+
+  double meanList(const std::vector<double> &vec) const {
+    double sum = 0;
+    for (double val : vec) {
+      sum += val;
+    }
+    return sum / vec.size();
+  }
 };
 
 std::unique_ptr<Box> Box::makeGreenBox(double initial_weight) {
