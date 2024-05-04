@@ -66,6 +66,7 @@ public:
   bool operator<(const Box &rhs) const { return weight_ < rhs.weight_; }
 
   virtual double calculateScore() const = 0;
+  virtual double absorb(double weight) = 0;
 
 protected:
   double weight_;
@@ -74,7 +75,7 @@ protected:
 class GreenBox : public Box {
 public:
   explicit GreenBox(double initial_weight) : Box(initial_weight) {}
-  double absorb(double weight) {
+  double absorb(double weight) override {
     absorbed_weights_.push_back(weight);
     weight_ = weight_ + weight;
     return calculateScore();
@@ -115,8 +116,10 @@ class Player {
 public:
   void takeTurn(uint32_t input_weight,
                 const std::vector<std::unique_ptr<Box>> &boxes) {
-    GreenBox box; // use of overloaded < on box to get minimun
-    score_ = box.absorb(input_weight);
+    auto smallest_box =
+        std::min_element(boxes.begin(), boxes.end(),
+                         [](const auto &a, const auto &b) { return *a < *b; });
+    score_ = score_ + (*smallest_box)->absorb(input_weight);
   }
   double getScore() const { return score_; }
 
@@ -155,7 +158,8 @@ TEST_CASE("Final scores for first 8 Fibonacci numbers", "[fibonacci8]") {
 }
 
 TEST_CASE("Test absorption of green box", "[green]") {
-  // TODO
+  std::unique_ptr<Box> green_box = Box::makeGreenBox(0.0);
+  REQUIRE(green_box->absorb(0) == 0.0);
 }
 
 TEST_CASE("Test absorption of blue box", "[blue]") {
