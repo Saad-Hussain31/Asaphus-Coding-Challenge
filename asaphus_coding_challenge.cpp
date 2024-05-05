@@ -118,6 +118,8 @@ public:
   }
 
   double calculateScore() const override {
+    if (absorbed_weights_.empty())
+      return 0.0;
     double smallest =
         *std::min_element(absorbed_weights_.begin(), absorbed_weights_.end());
     double largest =
@@ -129,8 +131,8 @@ private:
   std::vector<double> absorbed_weights_;
   // referred from:
   // https://github.com/darkartcode/Cantor-pairing-function/blob/master/cantor.cpp
-  double cantorFunction(double k2, double k1) const {
-    return ((k1 + k2) * (k1 + k2 + 1) / 2) + k2;
+  double cantorFunction(double k1, double k2) const {
+    return 0.5 * (k1 + k2) * (k1 + k2 + 1) + k2;
   }
 };
 
@@ -166,7 +168,13 @@ std::pair<double, double> play(const std::vector<uint32_t> &input_weights) {
 
   Player player_A, player_B;
 
-  player_A.takeTurn(input_weights[0], boxes);
+  for (size_t i = 0; i < input_weights.size(); ++i) {
+    if (i % 2 == 0) {
+      player_A.takeTurn(input_weights[i], boxes);
+    } else {
+      player_B.takeTurn(input_weights[i], boxes);
+    }
+  }
 
   std::cout << "Scores: player A " << player_A.getScore() << ", player B "
             << player_B.getScore() << std::endl;
@@ -194,5 +202,5 @@ TEST_CASE("Test absorption of green box", "[green]") {
 
 TEST_CASE("Test absorption of blue box", "[blue]") {
   std::unique_ptr<Box> blue_box = Box::makeBlueBox(0.2);
-  REQUIRE(blue_box->absorb(0.5) == 0.5);
+  REQUIRE(blue_box->absorb(1) == 4.0);
 }
