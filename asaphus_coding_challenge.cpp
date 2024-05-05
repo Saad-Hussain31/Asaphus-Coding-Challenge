@@ -66,7 +66,7 @@ public:
   bool operator<(const Box &rhs) const { return weight_ < rhs.weight_; }
 
   virtual double calculateScore() const = 0;
-  virtual double absorb(double weight) = 0;
+  virtual double absorb(const double &weight) = 0;
 
 protected:
   double weight_;
@@ -75,7 +75,7 @@ protected:
 class GreenBox : public Box {
 public:
   explicit GreenBox(double initial_weight) : Box(initial_weight) {}
-  double absorb(double weight) override {
+  double absorb(const double &weight) override {
     absorbed_weights_.push_back(weight);
     weight_ = weight_ + weight;
     return calculateScore();
@@ -101,7 +101,7 @@ private:
 
   double meanList(const std::vector<double> &vec) const {
     double sum = 0;
-    for (double val : vec) {
+    for (const auto &val : vec) {
       sum += val;
     }
     return sum / vec.size();
@@ -111,7 +111,7 @@ private:
 class BlueBox : public Box {
 public:
   explicit BlueBox(double initial_weight) : Box(initial_weight) {}
-  double absorb(double weight) override {
+  double absorb(const double &weight) override {
     absorbed_weights_.push_back(weight);
     weight_ = weight_ + weight;
     return calculateScore();
@@ -131,7 +131,7 @@ private:
   std::vector<double> absorbed_weights_;
   // referred from:
   // https://github.com/darkartcode/Cantor-pairing-function/blob/master/cantor.cpp
-  double cantorFunction(double k1, double k2) const {
+  double cantorFunction(const double &k1, const double &k2) const {
     return 0.5 * (k1 + k2) * (k1 + k2 + 1) + k2;
   }
 };
@@ -168,12 +168,14 @@ std::pair<double, double> play(const std::vector<uint32_t> &input_weights) {
 
   Player player_A, player_B;
 
-  for (size_t i = 0; i < input_weights.size(); ++i) {
+  size_t i = 0;
+  for (const auto &weight : input_weights) {
     if (i % 2 == 0) {
-      player_A.takeTurn(input_weights[i], boxes);
+      player_A.takeTurn(weight, boxes);
     } else {
-      player_B.takeTurn(input_weights[i], boxes);
+      player_B.takeTurn(weight, boxes);
     }
+    ++i;
   }
 
   std::cout << "Scores: player A " << player_A.getScore() << ", player B "
@@ -198,9 +200,13 @@ TEST_CASE("Final scores for first 8 Fibonacci numbers", "[fibonacci8]") {
 TEST_CASE("Test absorption of green box", "[green]") {
   std::unique_ptr<Box> green_box = Box::makeGreenBox(0.0);
   REQUIRE(green_box->absorb(3) == 9.0);
+  REQUIRE(green_box->absorb(12) == 56.25);
+  REQUIRE(green_box->absorb(15) == 100.0);
 }
 
 TEST_CASE("Test absorption of blue box", "[blue]") {
   std::unique_ptr<Box> blue_box = Box::makeBlueBox(0.2);
   REQUIRE(blue_box->absorb(1) == 4.0);
+  REQUIRE(blue_box->absorb(7) == 43.0);
+  REQUIRE(blue_box->absorb(23) == 323.0);
 }
