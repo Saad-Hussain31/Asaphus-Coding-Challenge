@@ -108,8 +108,38 @@ private:
   }
 };
 
+class BlueBox : public Box {
+public:
+  explicit BlueBox(double initial_weight) : Box(initial_weight) {}
+  double absorb(double weight) override {
+    absorbed_weights_.push_back(weight);
+    weight_ = weight_ + weight;
+    return calculateScore();
+  }
+
+  double calculateScore() const override {
+    double smallest =
+        *std::min_element(absorbed_weights_.begin(), absorbed_weights_.end());
+    double largest =
+        *std::max_element(absorbed_weights_.begin(), absorbed_weights_.end());
+    return cantorFunction(smallest, largest);
+  }
+
+private:
+  std::vector<double> absorbed_weights_;
+  // referred from:
+  // https://github.com/darkartcode/Cantor-pairing-function/blob/master/cantor.cpp
+  double cantorFunction(double k2, double k1) const {
+    return ((k1 + k2) * (k1 + k2 + 1) / 2) + k2;
+  }
+};
+
 std::unique_ptr<Box> Box::makeGreenBox(double initial_weight) {
   return std::make_unique<GreenBox>(initial_weight);
+}
+
+std::unique_ptr<Box> Box::makeBlueBox(double initial_weight) {
+  return std::make_unique<BlueBox>(initial_weight);
 }
 
 class Player {
@@ -119,7 +149,7 @@ public:
     auto smallest_box =
         std::min_element(boxes.begin(), boxes.end(),
                          [](const auto &a, const auto &b) { return *a < *b; });
-    score_ = score_ + (*smallest_box)->absorb(input_weight);
+    score_ += (*smallest_box)->absorb(input_weight);
   }
   double getScore() const { return score_; }
 
@@ -159,9 +189,10 @@ TEST_CASE("Final scores for first 8 Fibonacci numbers", "[fibonacci8]") {
 
 TEST_CASE("Test absorption of green box", "[green]") {
   std::unique_ptr<Box> green_box = Box::makeGreenBox(0.0);
-  REQUIRE(green_box->absorb(0) == 0.0);
+  REQUIRE(green_box->absorb(3) == 9.0);
 }
 
 TEST_CASE("Test absorption of blue box", "[blue]") {
-  // TODO
+  std::unique_ptr<Box> blue_box = Box::makeBlueBox(0.2);
+  REQUIRE(blue_box->absorb(0.5) == 0.5);
 }
