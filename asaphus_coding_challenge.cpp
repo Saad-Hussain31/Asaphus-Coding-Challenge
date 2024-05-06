@@ -210,3 +210,10 @@ TEST_CASE("Test absorption of blue box", "[blue]") {
   REQUIRE(blue_box->absorb(7) == 43.0);
   REQUIRE(blue_box->absorb(23) == 323.0);
 }
+
+// additional test case
+TEST_CASE("Test play function with empty input weights vector", "[play]") {
+    auto result = play({});
+    REQUIRE(result.first == 0.0);
+    REQUIRE(result.second == 0.0);
+}
